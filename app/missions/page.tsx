@@ -46,12 +46,18 @@ export default function MissionsPage() {
 
   if (loading) return <p>Loading...</p>;
 
-  // 🔥 Séparation des missions
-  const myMissions = missions.filter(
+  // 🔥 EXCLUSION DES MISSIONS TERMINÉES
+  const filteredMissions = missions.filter(
+    (mission) => mission.status !== "completed"
+  );
+
+  // 🔹 mes missions client
+  const myMissions = filteredMissions.filter(
     (mission) => user && mission.client === user.id
   );
 
-  const otherMissions = missions.filter(
+  // 🔹 autres missions
+  const otherMissions = filteredMissions.filter(
     (mission) => !user || mission.client !== user.id
   );
 
@@ -59,7 +65,7 @@ export default function MissionsPage() {
     <div className="p-6 max-w-5xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Missions</h1>
 
-      {/* 🔹 MES MISSIONS (CLIENT) */}
+      {/* 🔹 MES MISSIONS */}
       {user?.role === "client" && myMissions.length > 0 && (
         <div className="mb-10">
           <h2 className="text-xl font-semibold mb-4 text-blue-600">
@@ -76,9 +82,16 @@ export default function MissionsPage() {
                 <p className="text-gray-600">{mission.description}</p>
 
                 <div className="mt-2">
-                  <p><strong>Budget:</strong> {mission.budget} €</p>
-                  <p><strong>Deadline:</strong> {mission.deadline}</p>
-                  <p><strong>Status:</strong> {formatStatus(mission.status)}</p>
+                  <p>
+                    <strong>Budget:</strong> {mission.budget} €
+                  </p>
+                  <p>
+                    <strong>Deadline:</strong> {mission.deadline}
+                  </p>
+                  <p>
+                    <strong>Status:</strong>{" "}
+                    {formatStatus(mission.status)}
+                  </p>
                   <p>
                     <strong>Skills:</strong>{" "}
                     {mission.skills.length > 0
@@ -114,9 +127,16 @@ export default function MissionsPage() {
               <p className="text-gray-600">{mission.description}</p>
 
               <div className="mt-2">
-                <p><strong>Budget:</strong> {mission.budget} €</p>
-                <p><strong>Deadline:</strong> {mission.deadline}</p>
-                <p><strong>Status:</strong> {formatStatus(mission.status)}</p>
+                <p>
+                  <strong>Budget:</strong> {mission.budget} €
+                </p>
+                <p>
+                  <strong>Deadline:</strong> {mission.deadline}
+                </p>
+                <p>
+                  <strong>Status:</strong>{" "}
+                  {formatStatus(mission.status)}
+                </p>
                 <p>
                   <strong>Skills:</strong>{" "}
                   {mission.skills.length > 0

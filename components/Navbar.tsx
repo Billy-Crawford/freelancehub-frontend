@@ -26,7 +26,7 @@ export default function Navbar() {
         <Link href="/" className="hover:text-blue-600">
           Accueil
         </Link>
-        
+
         <Link href="/messages" className="hover:text-blue-600">
           Messages
         </Link>
@@ -80,6 +80,7 @@ export default function Navbar() {
                   Mes candidatures
                 </Link>
               )}
+              <Link href="/missions/completed">Missions terminées</Link>
             </div>
           )}
         </div>

@@ -54,6 +54,11 @@ export const deleteMission = async (id: number) => {
   await api.delete(`/missions/${id}/`);
 };
 
+export const getCompletedMissions = async () => {
+  const res = await api.get("/missions/completed/");
+  return res.data.map(mapMission);
+};
+
 /* =========================
    🔹 APPLICATION MAPPING
 ========================= */

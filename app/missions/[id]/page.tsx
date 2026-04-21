@@ -2,24 +2,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   getMission,
   applyMission,
   getMissionApplications,
   updateApplicationStatus,
+  deleteMission,
 } from "@/services/mission";
 import {
   initPayment,
   releasePayment,
   cancelPayment,
 } from "@/services/payment";
+import { createReview } from "@/services/review";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function MissionDetailPage() {
   const { id } = useParams();
+  const router = useRouter();
   const { user } = useAuth();
 
+  /* ===================== */
+  /* 🔹 STATE */
+  /* ===================== */
   const [mission, setMission] = useState<any>(null);
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +36,19 @@ export default function MissionDetailPage() {
   const [coverLetter, setCoverLetter] = useState("");
   const [proposedRate, setProposedRate] = useState<number | string>("");
 
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+
+  /* ===================== */
+  /* 🔹 DERIVED STATE */
+  /* ===================== */
   const isOwner = user && mission && user.id === mission.client;
+  const isFreelance = user?.role === "freelance";
+
+  const canReview =
+    mission &&
+    mission.status === "completed" &&
+    user; // utilisateur connecté uniquement
 
   /* ===================== */
   /* 🔹 LOAD MISSION */
@@ -53,8 +71,7 @@ export default function MissionDetailPage() {
   /* 🔹 LOAD APPLICATIONS */
   /* ===================== */
   useEffect(() => {
-    if (!user || !mission) return;
-    if (!isOwner) return;
+    if (!user || !mission || !isOwner) return;
 
     const fetchApps = async () => {
       try {
@@ -66,12 +83,34 @@ export default function MissionDetailPage() {
     };
 
     fetchApps();
-  }, [id, user, mission]);
+  }, [id, user, mission, isOwner]);
 
   /* ===================== */
-  /* 🔹 ACTIONS */
+  /* 🔥 DELETE MISSION */
   /* ===================== */
+  const handleDeleteMission = async () => {
+    const confirmDelete = confirm(
+      "⚠️ Voulez-vous vraiment supprimer cette mission ?"
+    );
 
+    if (!confirmDelete) return;
+
+    try {
+      setLoadingAction(true);
+      await deleteMission(Number(id));
+      alert("Mission supprimée");
+      router.push("/missions");
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de la suppression");
+    } finally {
+      setLoadingAction(false);
+    }
+  };
+
+  /* ===================== */
+  /* 🔹 APPLY */
+  /* ===================== */
   const handleApply = async () => {
     try {
       await applyMission(Number(id), {
@@ -85,6 +124,9 @@ export default function MissionDetailPage() {
     }
   };
 
+  /* ===================== */
+  /* 🔹 ACCEPT */
+  /* ===================== */
   const handleAccept = async (appId: number) => {
     await updateApplicationStatus(Number(id), appId, "accepted");
 
@@ -94,6 +136,9 @@ export default function MissionDetailPage() {
     }));
   };
 
+  /* ===================== */
+  /* 🔹 PAYMENT */
+  /* ===================== */
   const handleInit = async () => {
     setLoadingAction(true);
     try {
@@ -134,6 +179,26 @@ export default function MissionDetailPage() {
   };
 
   /* ===================== */
+  /* 🔹 REVIEW */
+  /* ===================== */
+  const handleReview = async () => {
+    try {
+      await createReview(Number(id), {
+        rating,
+        comment,
+      });
+
+      alert("Avis envoyé");
+    } catch (err: any) {
+      if (err.response?.data) {
+        alert(JSON.stringify(err.response.data));
+      } else {
+        alert("Erreur review");
+      }
+    }
+  };
+
+  /* ===================== */
   /* 🔹 UI */
   /* ===================== */
 
@@ -144,15 +209,25 @@ export default function MissionDetailPage() {
     <div className="p-6 space-y-6">
 
       {/* 🔹 HEADER */}
-      <div>
-        <h1 className="text-2xl font-bold">{mission.title}</h1>
-        <p>Status: {mission.status}</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold">{mission.title}</h1>
+          <p>Status: {mission.status}</p>
+        </div>
+
+        {isOwner && (
+          <button
+            onClick={handleDeleteMission}
+            disabled={loadingAction}
+            className="bg-black text-white px-4 py-2 hover:bg-red-600"
+          >
+            Supprimer
+          </button>
+        )}
       </div>
 
-      {/* ===================== */}
-      {/* 🔹 FREELANCE APPLY */}
-      {/* ===================== */}
-      {user?.role === "freelance" && mission.status === "open" && (
+      {/* 🔹 APPLY */}
+      {isFreelance && mission.status === "open" && (
         <div className="border p-4 space-y-3">
           <h3 className="font-bold">Postuler</h3>
 
@@ -180,9 +255,7 @@ export default function MissionDetailPage() {
         </div>
       )}
 
-      {/* ===================== */}
-      {/* 🔹 PAYMENT (CLIENT) */}
-      {/* ===================== */}
+      {/* 🔹 PAYMENT */}
       {isOwner && mission.status === "in_progress" && (
         <div className="flex gap-3">
           {!paymentStatus && (
@@ -216,9 +289,7 @@ export default function MissionDetailPage() {
         </div>
       )}
 
-      {/* ===================== */}
       {/* 🔹 APPLICATIONS */}
-      {/* ===================== */}
       {isOwner && (
         <div>
           <h2 className="text-xl font-bold">Candidatures</h2>
@@ -237,6 +308,39 @@ export default function MissionDetailPage() {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* 🔹 REVIEW */}
+      {canReview && (
+        <div className="border p-4 space-y-3">
+          <h2 className="text-xl font-bold">Donner une note</h2>
+
+          <select
+            value={rating}
+            onChange={(e) => setRating(Number(e.target.value))}
+            className="border p-2"
+          >
+            {[1, 2, 3, 4, 5].map((r) => (
+              <option key={r} value={r}>
+                {r} ⭐
+              </option>
+            ))}
+          </select>
+
+          <textarea
+            className="w-full border p-2"
+            placeholder="Commentaire"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+          />
+
+          <button
+            onClick={handleReview}
+            className="bg-purple-600 text-white px-4 py-2"
+          >
+            Envoyer avis
+          </button>
         </div>
       )}
     </div>
