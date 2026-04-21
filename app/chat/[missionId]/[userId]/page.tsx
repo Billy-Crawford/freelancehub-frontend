@@ -3,77 +3,86 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { connectChat, sendMessage, disconnectChat } from "@/services/chat";
 import { useAuth } from "@/hooks/useAuth";
+import { getMessages, sendMessageApi } from "@/services/chat";
 
 export default function ChatPage() {
-  const { missionId, userId } = useParams();
+  const { missionId } = useParams();
   const { user } = useAuth();
 
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
+  const [file, setFile] = useState<File | null>(null);
 
-  // 🔹 Récupération du token depuis localStorage
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+  const loadMessages = async () => {
+    const data = await getMessages(Number(missionId));
+    setMessages(data);
+  };
 
   useEffect(() => {
-    if (!token || !missionId || !userId) return;
+    loadMessages();
+    const interval = setInterval(loadMessages, 2000);
+    return () => clearInterval(interval);
+  }, [missionId]);
 
-    connectChat(Number(missionId), Number(userId), token, (data) => {
-      setMessages((prev) => [...prev, data]);
-    });
+  const handleSend = async () => {
+    if (!input.trim() && !file) return;
 
-    return () => disconnectChat();
-  }, [missionId, userId, token]);
-
-  const handleSend = () => {
-    if (!input.trim()) return;
-
-    sendMessage(input);
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        message: input,
-        sender: user?.id,
-      },
-    ]);
+    await sendMessageApi(Number(missionId), input, file || undefined);
 
     setInput("");
+    setFile(null);
+    loadMessages();
   };
 
   return (
     <div className="p-6 max-w-2xl mx-auto flex flex-col h-[80vh]">
       <h1 className="text-xl font-bold mb-4">Chat Mission #{missionId}</h1>
 
-      {/* 🔹 Messages */}
+      {/* messages */}
       <div className="flex-1 border p-4 rounded overflow-y-auto space-y-2">
-        {messages.map((msg, index) => {
-          const isMe = msg.sender === user?.id;
+        {messages.map((msg) => {
+          const isMe = msg.sender_id === user?.id;
 
           return (
             <div
-              key={index}
+              key={msg.id}
               className={`p-2 rounded ${
                 isMe ? "bg-blue-100 text-right" : "bg-gray-100"
               }`}
             >
-              <p>{msg.message}</p>
+              {msg.content && <p>{msg.content}</p>}
+
+              {/* 🔥 fichier */}
+              {msg.file && (
+                <a
+                  href={`http://127.0.0.1:8000${msg.file}`}
+                  target="_blank"
+                  className="text-blue-600 underline"
+                >
+                  📎 Télécharger fichier
+                </a>
+              )}
             </div>
           );
         })}
       </div>
 
-      {/* 🔹 Input */}
-      <div className="mt-4 flex gap-2">
+      {/* input */}
+      <div className="mt-4 flex flex-col gap-2">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          className="flex-1 border p-2 rounded"
+          className="border p-2 rounded"
           placeholder="Votre message..."
         />
+
+        <input
+          type="file"
+          onChange={(e) => setFile(e.target.files?.[0] || null)}
+        />
+
         <button
           onClick={handleSend}
           className="bg-blue-600 text-white px-4 py-2 rounded"
@@ -84,3 +93,4 @@ export default function ChatPage() {
     </div>
   );
 }
+

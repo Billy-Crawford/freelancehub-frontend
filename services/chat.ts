@@ -1,55 +1,28 @@
 // services/chat.ts
+
 import api from "./api";
 
-let socket: WebSocket | null = null;
-
-export const connectChat = (
-  missionId: number,
-  userId: number,
-  token: string,
-  onMessage: (data: any) => void,
-) => {
-  socket = new WebSocket(
-    `ws://127.0.0.1:8000/ws/chat/${missionId}/${userId}/?token=${token}`,
-  );
-
-  socket.onopen = () => {
-    console.log("WebSocket connected");
-  };
-
-  socket.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-
-    onMessage({
-      message: data.message,
-      sender: data.sender,
-      sender_email: data.sender_email,
-    });
-  };
-
-  socket.onclose = () => {
-    console.log("WebSocket disconnected");
-  };
-
-  socket.onerror = (err) => {
-    console.error("WebSocket error:", err);
-  };
-};
-
-export const sendMessage = (message: string) => {
-  if (socket && socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({ message }));
-  }
-};
-
-export const getConversations = async () => {
-  const res = await api.get("/chat/conversations/");
+export const getMessages = async (missionId: number) => {
+  const res = await api.get(`/chat/messages/${missionId}/`);
   return res.data;
 };
 
-export const disconnectChat = () => {
-  if (socket) socket.close();
+export const sendMessageApi = async (
+  missionId: number,
+  message: string,
+  file?: File
+) => {
+  const formData = new FormData();
+
+  if (message) formData.append("message", message);
+  if (file) formData.append("file", file);
+
+  const res = await api.post(`/chat/messages/${missionId}/`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return res.data;
 };
-
-
 

@@ -31,6 +31,8 @@ export default function Navbar() {
           Messages
         </Link>
 
+        <Link href="/payments">Paiements</Link>
+
         {/* 🔹 Dropdown Missions */}
         <div
           className="relative"
