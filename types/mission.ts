@@ -1,3 +1,4 @@
+// types/mission.ts
 export type MissionStatus = "open" | "in_progress" | "completed" | "cancelled";
 
 export interface Mission {

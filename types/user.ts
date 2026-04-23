@@ -1,3 +1,4 @@
+// types/user.ts
 export type UserRole = "client" | "freelance";
 
 export interface ClientProfile {

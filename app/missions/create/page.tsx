@@ -1,3 +1,4 @@
+// app/missions/create/page.tsx
 "use client";
 
 import { useState, FormEvent } from "react";
@@ -16,40 +17,45 @@ export default function CreateMissionPage() {
     deadline: "",
     skills: "",
   });
-
   const [loading, setLoading] = useState(false);
 
-  if (!user) return <p>Non autorisé</p>;
-  if (user.role !== "client") return <p>Accès réservé aux clients</p>;
+  if (!user) return (
+    <div className="flex items-center justify-center min-h-[50vh]">
+      <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center max-w-sm">
+        <div className="text-4xl mb-3">🔒</div>
+        <p className="text-red-700 font-medium">Non autorisé</p>
+      </div>
+    </div>
+  );
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+  if (user.role !== "client") return (
+    <div className="flex items-center justify-center min-h-[50vh]">
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center max-w-sm">
+        <div className="text-4xl mb-3">🚫</div>
+        <p className="text-amber-700 font-medium">Accès réservé aux clients</p>
+      </div>
+    </div>
+  );
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
     if (!form.title || !form.description || !form.budget || !form.deadline) {
       alert("Veuillez remplir tous les champs");
       return;
     }
-
     setLoading(true);
-
     try {
       await createMission({
         title: form.title,
         description: form.description,
         budget: Number(form.budget),
         deadline: form.deadline,
-        skills: form.skills.split(",").map((s) => s.trim()),
+        skills: form.skills.split(",").map((s) => s.trim()).filter(Boolean),
       });
-
       alert("Mission créée !");
       router.push("/my-missions");
     } catch (err) {
@@ -60,63 +66,119 @@ export default function CreateMissionPage() {
     }
   };
 
+  const inputClass = "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-all";
+  const labelClass = "block text-sm font-medium text-gray-700 mb-1.5";
+
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Créer une mission</h1>
+    <div className="max-w-2xl mx-auto">
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Créer une mission</h1>
+        <p className="text-sm text-gray-500 mt-1">Décrivez votre projet pour trouver le bon freelance</p>
+      </div>
 
-        <input
-          type="text"
-          name="title"
-          placeholder="Titre"
-          value={form.title}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-        />
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+        <form onSubmit={handleSubmit} className="space-y-5">
 
-        <textarea
-          name="description"
-          placeholder="Description"
-          value={form.description}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-        />
+          <div>
+            <label className={labelClass}>Titre de la mission</label>
+            <input
+              type="text"
+              name="title"
+              placeholder="Ex: Développement d&apos;une application mobile"
+              value={form.title}
+              onChange={handleChange}
+              className={inputClass}
+            />
+          </div>
 
-        <input
-          type="number"
-          name="budget"
-          placeholder="Budget"
-          value={form.budget}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-        />
+          <div>
+            <label className={labelClass}>Description</label>
+            <textarea
+              name="description"
+              rows={5}
+              placeholder="Décrivez votre projet en détail : objectifs, livrables attendus, contexte..."
+              value={form.description}
+              onChange={handleChange}
+              className={inputClass}
+            />
+          </div>
 
-        <input
-          type="date"
-          name="deadline"
-          value={form.deadline}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-        />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Budget (€)</label>
+              <input
+                type="number"
+                name="budget"
+                placeholder="Ex: 1500"
+                value={form.budget}
+                onChange={handleChange}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Date limite</label>
+              <input
+                type="date"
+                name="deadline"
+                value={form.deadline}
+                onChange={handleChange}
+                className={inputClass}
+              />
+            </div>
+          </div>
 
-        <input
-          type="text"
-          name="skills"
-          placeholder="Skills (ex: Python, Django, React)"
-          value={form.skills}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-        />
+          <div>
+            <label className={labelClass}>
+              Compétences requises
+              <span className="text-gray-400 font-normal ml-1">(séparées par des virgules)</span>
+            </label>
+            <input
+              type="text"
+              name="skills"
+              placeholder="Ex: Python, Django, React"
+              value={form.skills}
+              onChange={handleChange}
+              className={inputClass}
+            />
+            {form.skills && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {form.skills.split(",").map((s) => s.trim()).filter(Boolean).map((skill) => (
+                  <span key={skill} className="px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-50 text-indigo-600 border border-indigo-100">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          {loading ? "Création..." : "Créer"}
-        </button>
-      </form>
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="flex-1 py-3 rounded-xl text-sm font-semibold text-gray-600 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-all"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 shadow-md shadow-indigo-100 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                  </svg>
+                  Création...
+                </span>
+              ) : "Créer la mission"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
