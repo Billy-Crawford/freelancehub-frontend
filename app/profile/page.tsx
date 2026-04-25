@@ -12,13 +12,9 @@ export default function ProfilePage() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
 
-  /* ===================== */
-  /* 🔹 LOAD REVIEWS */
-  /* ===================== */
   useEffect(() => {
     if (!user) return;
 
-    // uniquement freelance
     if (user.role !== "freelance") {
       setLoadingReviews(false);
       return;
@@ -38,153 +34,160 @@ export default function ProfilePage() {
     fetchReviews();
   }, [user]);
 
-  if (loading) return <p>Loading...</p>;
-  if (!user) return <p>Not authenticated</p>;
+  if (loading) return <p className="p-6 text-gray-500">Loading...</p>;
+  if (!user) return <p className="p-6 text-red-500">Not authenticated</p>;
 
-  /* ===================== */
-  /* 🔹 MOYENNE */
-  /* ===================== */
   const average =
     reviews.length > 0
-      ? (
-          reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
-        ).toFixed(1)
+      ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
       : null;
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto p-6 space-y-6">
 
-      {/* ===================== */}
-      {/* 🔹 HEADER */}
-      {/* ===================== */}
-      <div className="flex items-center gap-4">
+      {/* ================= HEADER ================= */}
+      <div className="bg-white border rounded-2xl p-6 shadow-sm flex items-center gap-5">
         {user.role === "client" && user.client_profile?.avatar && (
           <img
             src={user.client_profile.avatar}
-            alt="Avatar Client"
-            className="w-24 h-24 rounded-full object-cover"
+            className="w-20 h-20 rounded-full object-cover border"
           />
         )}
 
         {user.role === "freelance" && user.freelance_profile?.avatar && (
           <img
             src={user.freelance_profile.avatar}
-            alt="Avatar Freelance"
-            className="w-24 h-24 rounded-full object-cover"
+            className="w-20 h-20 rounded-full object-cover border"
           />
         )}
 
-        <div>
-          <h1 className="text-2xl font-bold">
+        <div className="space-y-1">
+          <h1 className="text-xl font-bold text-gray-900">
             {user.first_name} {user.last_name}
           </h1>
-          <p className="text-gray-500">Rôle : {user.role}</p>
+          <p className="text-sm text-gray-500">
+            {user.email}
+          </p>
+
+          <span className="inline-block text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+            {user.role}
+          </span>
         </div>
       </div>
 
-      {/* ===================== */}
-      {/* 🔹 INFOS */}
-      {/* ===================== */}
-      <div>
-        <p><strong>Email:</strong> {user.email}</p>
-      </div>
-
-      {/* ===================== */}
-      {/* 🔹 CLIENT */}
-      {/* ===================== */}
+      {/* ================= CLIENT ================= */}
       {user.role === "client" && user.client_profile && (
-        <div className="p-4 border rounded">
-          <h2 className="font-semibold mb-2">Profil Client</h2>
-          <p><strong>Entreprise:</strong> {user.client_profile.company}</p>
-          <p><strong>Bio:</strong> {user.client_profile.bio}</p>
-          <p><strong>Website:</strong> {user.client_profile.website}</p>
-        </div>
-      )}
+        <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-2">
+          <h2 className="font-semibold text-gray-900">Profil Client</h2>
 
-      {/* ===================== */}
-      {/* 🔹 FREELANCE */}
-      {/* ===================== */}
-      {user.role === "freelance" && user.freelance_profile && (
-        <div className="p-4 border rounded space-y-2">
-          <h2 className="font-semibold">Profil Freelance</h2>
+          <p className="text-sm text-gray-600">
+            <span className="font-medium">Entreprise:</span>{" "}
+            {user.client_profile.company}
+          </p>
 
-          <p><strong>Bio:</strong> {user.freelance_profile.bio}</p>
-          <p><strong>Skills:</strong> {user.freelance_profile.skills.join(", ")}</p>
-          <p><strong>Tarif:</strong> {user.freelance_profile.hourly_rate} €/h</p>
+          <p className="text-sm text-gray-600">
+            <span className="font-medium">Bio:</span>{" "}
+            {user.client_profile.bio}
+          </p>
 
-          <p>
-            <strong>Portfolio:</strong>
-            <a
-              href={user.freelance_profile.portfolio_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline ml-1"
-            >
-              Voir
-            </a>
+          <p className="text-sm text-gray-600">
+            <span className="font-medium">Website:</span>{" "}
+            {user.client_profile.website}
           </p>
         </div>
       )}
 
-      {/* ===================== */}
-      {/* ⭐ REVIEWS FREELANCE */}
-      {/* ===================== */}
+      {/* ================= FREELANCE ================= */}
+      {user.role === "freelance" && user.freelance_profile && (
+        <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-3">
+          <h2 className="font-semibold text-gray-900">Profil Freelance</h2>
+
+          <p className="text-sm text-gray-600">
+            <span className="font-medium">Bio:</span> {user.freelance_profile.bio}
+          </p>
+
+          <p className="text-sm text-gray-600">
+            <span className="font-medium">Skills:</span>{" "}
+            {user.freelance_profile.skills.join(", ")}
+          </p>
+
+          <p className="text-sm text-gray-600">
+            <span className="font-medium">Tarif:</span>{" "}
+            {user.freelance_profile.hourly_rate} €/h
+          </p>
+
+          <a
+            href={user.freelance_profile.portfolio_url}
+            target="_blank"
+            className="text-indigo-600 text-sm hover:underline"
+          >
+            Voir portfolio →
+          </a>
+        </div>
+      )}
+
+      {/* ================= REVIEWS ================= */}
       {user.role === "freelance" && (
-        <div className="p-4 border rounded space-y-4">
-          <h2 className="text-xl font-bold">Avis clients</h2>
+        <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
+
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Avis clients</h2>
+
+            {average && (
+              <span className="text-sm font-medium bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full border">
+                ⭐ {average} / 5
+              </span>
+            )}
+          </div>
 
           {loadingReviews ? (
-            <p>Chargement...</p>
+            <p className="text-gray-500 text-sm">Chargement...</p>
+          ) : reviews.length === 0 ? (
+            <p className="text-gray-400 text-sm">Aucun avis pour le moment</p>
           ) : (
-            <>
-              {/* moyenne */}
-              <div>
-                {average ? (
-                  <p className="text-2xl font-semibold">
-                    {average} ⭐ ({reviews.length} avis)
-                  </p>
-                ) : (
-                  <p>Aucun avis pour le moment</p>
-                )}
-              </div>
-
-              {/* liste */}
-              <div className="space-y-3">
-                {reviews.map((review) => (
-                  <div key={review.id} className="border p-3 rounded">
-                    <p className="font-bold">{review.rating} ⭐</p>
-
-                    {review.comment && (
-                      <p className="text-gray-700">{review.comment}</p>
-                    )}
-
-                    {review.reviewer_email && (
-                      <p className="text-sm text-gray-500">
-                        Par: {review.reviewer_email}
-                      </p>
-                    )}
+            <div className="space-y-3">
+              {reviews.map((review) => (
+                <div
+                  key={review.id}
+                  className="border rounded-xl p-4 bg-gray-50"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold text-yellow-600">
+                      ⭐ {review.rating}/5
+                    </p>
 
                     <p className="text-xs text-gray-400">
                       {new Date(review.created_at).toLocaleDateString()}
                     </p>
                   </div>
-                ))}
-              </div>
-            </>
+
+                  {review.comment && (
+                    <p className="text-sm text-gray-700 mt-2">
+                      {review.comment}
+                    </p>
+                  )}
+
+                  {review.reviewer_email && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Par {review.reviewer_email}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
         </div>
       )}
 
-      {/* ===================== */}
-      {/* 🔹 EDIT */}
-      {/* ===================== */}
-      <Link
-        href="/profile/edit"
-        className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-      >
-        Modifier mon profil
-      </Link>
+      {/* ================= EDIT ================= */}
+      <div className="flex justify-end">
+        <Link
+          href="/profile/edit"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl text-sm transition"
+        >
+          Modifier mon profil
+        </Link>
+      </div>
     </div>
   );
 }
-

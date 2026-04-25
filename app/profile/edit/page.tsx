@@ -1,4 +1,4 @@
-//  app/profile/edit/page.tsx
+// app/profile/edit/page.tsx
 "use client";
 
 import { useState, useEffect, FormEvent } from "react";
@@ -28,20 +28,15 @@ export default function EditProfilePage() {
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
-  /* ===================== */
-  /* 🔹 INIT DATA */
-  /* ===================== */
   useEffect(() => {
     if (!user) return;
 
-    // 🔹 Infos générales
     setForm((prev: any) => ({
       ...prev,
       first_name: user.first_name || "",
       last_name: user.last_name || "",
     }));
 
-    // 🔹 CLIENT
     if (user.role === "client" && user.client_profile) {
       const profile = user.client_profile;
 
@@ -50,13 +45,11 @@ export default function EditProfilePage() {
         bio: profile.bio || "",
         company: profile.company || "",
         website: profile.website || "",
-        avatar: null,
       }));
 
       setAvatarPreview(profile.avatar || null);
     }
 
-    // 🔹 FREELANCE
     if (user.role === "freelance" && user.freelance_profile) {
       const profile = user.freelance_profile;
 
@@ -66,35 +59,28 @@ export default function EditProfilePage() {
         skills: profile.skills || [],
         hourly_rate: profile.hourly_rate || "",
         portfolio_url: profile.portfolio_url || "",
-        avatar: null,
       }));
 
       setAvatarPreview(profile.avatar || null);
     }
   }, [user]);
 
-  if (loading) return <p>Loading...</p>;
-  if (!user) return <p>Not authenticated</p>;
+  if (loading) return <p className="p-6 text-gray-500">Loading...</p>;
+  if (!user) return <p className="p-6 text-red-500">Not authenticated</p>;
 
-  /* ===================== */
-  /* 🔹 HANDLERS */
-  /* ===================== */
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
+  const handleChange = (e: any) => {
     const { name, value } = e.target;
     setForm((prev: any) => ({ ...prev, [name]: value }));
   };
 
-  const handleSkillsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSkillsChange = (e: any) => {
     setForm((prev: any) => ({
       ...prev,
-      skills: e.target.value.split(",").map((s) => s.trim()),
+      skills: e.target.value.split(",").map((s: string) => s.trim()),
     }));
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = (e: any) => {
     const file = e.target.files?.[0];
     if (file) {
       setForm((prev: any) => ({ ...prev, avatar: file }));
@@ -102,21 +88,15 @@ export default function EditProfilePage() {
     }
   };
 
-  /* ===================== */
-  /* 🔥 SUBMIT */
-  /* ===================== */
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     try {
-      // 🔥 1. UPDATE USER
       await updateUser({
         first_name: form.first_name,
         last_name: form.last_name,
       });
 
-      // 🔥 2. PREPARE PROFILE DATA
       let data: any;
 
       if (form.avatar instanceof File) {
@@ -126,7 +106,9 @@ export default function EditProfilePage() {
           if (["first_name", "last_name"].includes(key)) return;
 
           if (key === "skills" && Array.isArray(form[key])) {
-            form[key].forEach((skill: string) => data.append("skills", skill));
+            form[key].forEach((skill: string) =>
+              data.append("skills", skill)
+            );
           } else {
             data.append(key, form[key]);
           }
@@ -137,14 +119,12 @@ export default function EditProfilePage() {
         delete data.last_name;
       }
 
-      // 🔥 3. UPDATE PROFILE
       if (user.role === "client") {
         await updateClientProfile(data);
       } else {
         await updateFreelanceProfile(data);
       }
 
-      // 🔥 4. REFRESH
       await refreshUser();
       router.push("/profile");
     } catch (err) {
@@ -153,84 +133,111 @@ export default function EditProfilePage() {
     }
   };
 
-  /* ===================== */
-  /* 🔹 UI */
-  /* ===================== */
+  const inputClass =
+    "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition";
 
   return (
-    <div className="p-6 max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Modifier mon profil</h1>
+    <div className="max-w-2xl mx-auto p-6 space-y-6">
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* 🔥 NOM / PRENOM */}
-        <div>
-          <label className="block font-semibold mb-1">Prénom</label>
-          <input
-            type="text"
-            name="first_name"
-            value={form.first_name}
-            onChange={handleChange}
-            className="w-full border p-2"
-          />
-        </div>
+      {/* HEADER */}
+      <div className="bg-white border rounded-2xl p-5 shadow-sm">
+        <h1 className="text-xl font-bold text-gray-900">
+          Modifier mon profil
+        </h1>
+        <p className="text-sm text-gray-500">
+          Mets à jour tes informations personnelles
+        </p>
+      </div>
 
-        <div>
-          <label className="block font-semibold mb-1">Nom</label>
-          <input
-            type="text"
-            name="last_name"
-            value={form.last_name}
-            onChange={handleChange}
-            className="w-full border p-2"
-          />
+      {/* FORM */}
+      <form onSubmit={handleSubmit} className="space-y-5">
+
+        {/* NAMES */}
+        <div className="bg-white border rounded-2xl p-5 space-y-4 shadow-sm">
+          <div>
+            <label className="text-sm font-medium text-gray-700">Prénom</label>
+            <input
+              name="first_name"
+              value={form.first_name}
+              onChange={handleChange}
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-700">Nom</label>
+            <input
+              name="last_name"
+              value={form.last_name}
+              onChange={handleChange}
+              className={inputClass}
+            />
+          </div>
         </div>
 
         {/* AVATAR */}
-        <div>
-          <label className="block font-semibold mb-1">Avatar</label>
-          {avatarPreview && (
-            <img src={avatarPreview} className="w-24 h-24 rounded-full mb-2" />
-          )}
-          <input type="file" onChange={handleAvatarChange} />
+        <div className="bg-white border rounded-2xl p-5 shadow-sm">
+          <label className="text-sm font-medium text-gray-700">
+            Avatar
+          </label>
+
+          <div className="flex items-center gap-4 mt-3">
+            {avatarPreview && (
+              <img
+                src={avatarPreview}
+                className="w-16 h-16 rounded-full object-cover border"
+              />
+            )}
+
+            <input type="file" onChange={handleAvatarChange} />
+          </div>
         </div>
 
         {/* BIO */}
-        <textarea
-          name="bio"
-          value={form.bio}
-          onChange={handleChange}
-          className="w-full border p-2"
-        />
+        <div className="bg-white border rounded-2xl p-5 shadow-sm">
+          <label className="text-sm font-medium text-gray-700">Bio</label>
+          <textarea
+            name="bio"
+            value={form.bio}
+            onChange={handleChange}
+            className={inputClass}
+            rows={4}
+          />
+        </div>
 
         {/* CLIENT */}
         {user.role === "client" && (
-          <>
+          <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
+            <h2 className="font-semibold text-gray-900">Infos entreprise</h2>
+
             <input
               name="company"
               value={form.company}
               onChange={handleChange}
-              className="w-full border p-2"
               placeholder="Entreprise"
+              className={inputClass}
             />
 
             <input
               name="website"
               value={form.website}
               onChange={handleChange}
-              className="w-full border p-2"
               placeholder="Website"
+              className={inputClass}
             />
-          </>
+          </div>
         )}
 
         {/* FREELANCE */}
         {user.role === "freelance" && (
-          <>
+          <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
+            <h2 className="font-semibold text-gray-900">Infos freelance</h2>
+
             <input
               value={form.skills.join(", ")}
               onChange={handleSkillsChange}
-              className="w-full border p-2"
-              placeholder="Skills"
+              placeholder="Skills (ex: React, Node, UI)"
+              className={inputClass}
             />
 
             <input
@@ -238,24 +245,29 @@ export default function EditProfilePage() {
               name="hourly_rate"
               value={form.hourly_rate}
               onChange={handleChange}
-              className="w-full border p-2"
-              placeholder="Tarif"
+              placeholder="Tarif / heure"
+              className={inputClass}
             />
 
             <input
               name="portfolio_url"
               value={form.portfolio_url}
               onChange={handleChange}
-              className="w-full border p-2"
               placeholder="Portfolio"
+              className={inputClass}
             />
-          </>
+          </div>
         )}
 
-        <button className="bg-blue-600 text-white px-4 py-2">
+        {/* SUBMIT */}
+        <button
+          type="submit"
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-semibold transition"
+        >
           Sauvegarder
         </button>
       </form>
     </div>
   );
 }
+

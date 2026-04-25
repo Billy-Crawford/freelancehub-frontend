@@ -1,4 +1,5 @@
-//  app/layout.tsx
+// app/layout.tsx
+import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 
@@ -15,12 +16,16 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className="bg-[#f8f7ff] min-h-screen">
-        <Navbar />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {children}
-        </main>
+        <AuthProvider>
+          <Navbar />
+
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {children}
+          </main>
+        </AuthProvider>
       </body>
     </html>
   );
 }
+
 

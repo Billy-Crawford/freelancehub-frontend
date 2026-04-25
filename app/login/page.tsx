@@ -16,7 +16,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await loginUser(email, password);
-      router.push("/missions");
+      router.push("/");
     } catch (error) {
       alert("Erreur de connexion");
     } finally {
